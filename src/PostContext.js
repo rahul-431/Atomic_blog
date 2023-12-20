@@ -1,4 +1,4 @@
-import React, { createContext, useState } from "react";
+import React, { createContext, useContext, useState } from "react";
 import { faker } from "@faker-js/faker";
 
 //creating a new context
@@ -12,12 +12,12 @@ function createRandomPost() {
   };
 }
 
-export default function PostProvider() {
+//this is a custom context
+function PostProvider({ children }) {
   const [posts, setPosts] = useState(() =>
     Array.from({ length: 30 }, () => createRandomPost())
   );
   const [searchQuery, setSearchQuery] = useState("");
-  const [isFakeDark, setIsFakeDark] = useState(false);
 
   // Derived state. These are the posts that will actually be displayed
   const searchedPosts =
@@ -36,5 +36,28 @@ export default function PostProvider() {
   function handleClearPosts() {
     setPosts([]);
   }
-  return <div>PostProvider</div>;
+  return (
+    <PostContext.Provider
+      value={{
+        posts: searchedPosts,
+        onAddPost: handleAddPost,
+        onClearPosts: handleClearPosts,
+        searchQuery,
+        setSearchQuery,
+        createRandomPost,
+      }}
+    >
+      {children}
+    </PostContext.Provider>
+  );
 }
+
+//custom useContext hook
+function usePosts() {
+  const context = useContext(PostContext);
+  if (context === undefined) {
+    throw new Error("You are using post context outside the postProvider");
+  }
+  return context;
+}
+export { PostProvider, usePosts };
